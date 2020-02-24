@@ -1,0 +1,75 @@
+﻿<Window x:Class="HidVanguard.Config.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HidVanguard.Config.UI"
+        mc:Ignorable="d"
+        
+        Title="HidGuardian / HidVanguard Configuration"
+        WindowStartupLocation="CenterScreen"
+        Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style TargetType="GroupBox">
+                <Setter Property="Margin" Value="5" />
+            </Style>
+        </Grid.Resources>
+        
+        <GroupBox Header="HidGuardian - Hidden Devices">
+            
+        </GroupBox>
+
+        <GridSplitter Grid.Column="1" Width="2" ResizeBehavior="PreviousAndNext" />
+
+        <GroupBox Grid.Column="2" Header="HidVanguard - Program Whitelist">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <ListView Margin="2 4 2 2">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Width="20" />
+                            <GridViewColumn Header="Path" />
+                            <GridViewColumn Header="Security Level" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
+        </GroupBox>
+
+        <StatusBar Grid.Row="1">
+            <StatusBarItem Content="HidGuardian Status:" />
+            <StatusBarItem Content="Installed?" />
+
+            <StatusBarItem HorizontalAlignment="Right">
+                <Button>Uninstall?</Button>
+            </StatusBarItem>
+        </StatusBar>
+
+        <StatusBar Grid.Row="1" Grid.Column="1" />
+
+        <StatusBar Grid.Row="1" Grid.Column="2">
+            <StatusBarItem Content="HidVanguard Status:" />
+            <StatusBarItem Content="Installed?" />
+
+            <StatusBarItem HorizontalAlignment="Right">
+                <Button>Uninstall?</Button>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
