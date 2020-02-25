@@ -62,7 +62,13 @@
                     </GroupStyle>
                 </ListView.GroupStyle>
 
-                <ListView.ItemTemplate>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="MouseDoubleClick">
+                        <b:InvokeCommandAction Command="{Binding GameDeviceToggleHiddenCommand}" CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" />
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+                
+                <!--<ListView.ItemTemplate>
                     <DataTemplate>
                         <GridViewRowPresenter Content="{TemplateBinding Content}" Columns="{TemplateBinding GridView.ColumnCollection}">
                             <b:Interaction.Triggers>
@@ -72,7 +78,7 @@
                             </b:Interaction.Triggers>
                         </GridViewRowPresenter>
                     </DataTemplate>
-                </ListView.ItemTemplate>
+                </ListView.ItemTemplate>-->
             </ListView>
         </GroupBox>
 

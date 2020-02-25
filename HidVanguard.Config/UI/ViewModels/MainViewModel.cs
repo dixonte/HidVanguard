@@ -29,14 +29,10 @@ namespace HidVanguard.Config.UI.ViewModels
             GameDevices = new ObservableCollection<GameDevice>(deviceService.GetGameDevices());
         }
 
-        private ICommand _GameDeviceDoubleClickCommand;
-        //public ICommand GameDeviceDoubleClickCommand => _GameDeviceDoubleClickCommand ?? (_GameDeviceDoubleClickCommand = new RelayCommand(() =>
-        //{
-
-        //}));
-        public ICommand GameDeviceDoubleClickCommand => new RelayCommand(() =>
+        private ICommand _gameDeviceToggleHiddenCommand;
+        public ICommand GameDeviceToggleHiddenCommand => _gameDeviceToggleHiddenCommand ?? (_gameDeviceToggleHiddenCommand = new RelayCommand<GameDevice>(gameDevice =>
         {
-
-        });
+            gameDevice.Hidden = !gameDevice.Hidden;
+        }));
     }
 }
