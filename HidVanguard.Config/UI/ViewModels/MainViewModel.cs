@@ -4,6 +4,7 @@ using HidVanguard.Config.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Input;
@@ -14,9 +15,12 @@ namespace HidVanguard.Config.UI.ViewModels
     {
     }
 
-    public class MainViewModel : IMainViewModel
+    public class MainViewModel : IMainViewModel, INotifyPropertyChanged
     {
         public ObservableCollection<GameDevice> GameDevices { get; set; }
+        public GameDevice SelectedDevice { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private IDeviceService deviceService;
 
@@ -30,6 +34,7 @@ namespace HidVanguard.Config.UI.ViewModels
         }
 
         private ICommand _gameDeviceToggleHiddenCommand;
+
         public ICommand GameDeviceToggleHiddenCommand => _gameDeviceToggleHiddenCommand ?? (_gameDeviceToggleHiddenCommand = new RelayCommand<GameDevice>(gameDevice =>
         {
             gameDevice.Hidden = !gameDevice.Hidden;

@@ -16,6 +16,10 @@
 
     <Window.Resources>
         <conv:HiddenTextConverter x:Key="HiddenTextConverter" />
+        <conv:StringArrayMultiLineConverter x:Key="StringArrayMultiLineConverter" />
+        <conv:CountVisibilityConverter x:Key="CountVisibilityConverter" />
+        <conv:NullVisibilityConverter x:Key="NullVisibilityConverter" />
+
         <CollectionViewSource x:Key="GameDeviceCol" Source="{Binding GameDevices}" IsLiveGroupingRequested="True">
             <CollectionViewSource.SortDescriptions>
                 <scm:SortDescription PropertyName="BusName" />
@@ -45,41 +49,40 @@
         </Grid.Resources>
         
         <GroupBox Header="HidGuardian - Whitelist Devices">
-            <ListView Margin="2 4 2 2" ItemsSource="{Binding Source={StaticResource GameDeviceCol}}">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="Device" Width="Auto" DisplayMemberBinding="{Binding BusName}" />
-                    </GridView>
-                </ListView.View>
-
-                <ListView.GroupStyle>
-                    <GroupStyle>
-                        <GroupStyle.HeaderTemplate>
-                            <DataTemplate>
-                                <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding Name}"/>
-                            </DataTemplate>
-                        </GroupStyle.HeaderTemplate>
-                    </GroupStyle>
-                </ListView.GroupStyle>
-
-                <b:Interaction.Triggers>
-                    <b:EventTrigger EventName="MouseDoubleClick">
-                        <b:InvokeCommandAction Command="{Binding GameDeviceToggleHiddenCommand}" CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" />
-                    </b:EventTrigger>
-                </b:Interaction.Triggers>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 
-                <!--<ListView.ItemTemplate>
-                    <DataTemplate>
-                        <GridViewRowPresenter Content="{TemplateBinding Content}" Columns="{TemplateBinding GridView.ColumnCollection}">
-                            <b:Interaction.Triggers>
-                                <b:EventTrigger EventName="Click">
-                                    <b:InvokeCommandAction Command="{Binding GameDeviceDoubleClickCommand}" />
-                                </b:EventTrigger>
-                            </b:Interaction.Triggers>
-                        </GridViewRowPresenter>
-                    </DataTemplate>
-                </ListView.ItemTemplate>-->
-            </ListView>
+                <ListView Margin="2 4 2 2" ItemsSource="{Binding Source={StaticResource GameDeviceCol}}" SelectedItem="{Binding SelectedDevice}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Device" Width="Auto" DisplayMemberBinding="{Binding BusName}" />
+                        </GridView>
+                    </ListView.View>
+
+                    <ListView.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListView.GroupStyle>
+
+                    <b:Interaction.Triggers>
+                        <b:EventTrigger EventName="MouseDoubleClick">
+                            <b:InvokeCommandAction Command="{Binding GameDeviceToggleHiddenCommand}" CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" />
+                        </b:EventTrigger>
+                    </b:Interaction.Triggers>
+                </ListView>
+
+                <Expander Grid.Row="1" Header="Hardware Ids" IsExpanded="False" Visibility="{Binding SelectedDevice, Mode=OneWay, Converter={StaticResource NullVisibilityConverter}}">
+                    <TextBlock Text="{Binding SelectedDevice.HardwareIds, Mode=OneWay, Converter={StaticResource StringArrayMultiLineConverter}}" />
+                </Expander>
+            </Grid>
         </GroupBox>
 
         <GridSplitter Grid.Column="1" Width="2" ResizeBehavior="PreviousAndNext" />
