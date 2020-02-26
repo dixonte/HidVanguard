@@ -1,4 +1,4 @@
-﻿using GalaSoft.MvvmLight.CommandWpf;
+﻿using GalaSoft.MvvmLight.Command;
 using HidVanguard.Config.Components.Services;
 using HidVanguard.Config.Model;
 using System;
