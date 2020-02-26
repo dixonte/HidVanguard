@@ -1,5 +1,4 @@
-﻿using HidVanguard.Config.Extensions;
-using HidVanguard.Config.Model;
+﻿using HidVanguard.Config.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +29,8 @@ namespace HidVanguard.Config.Components.Services
 
         static readonly Guid USB_INPUT_GUID = new Guid("745a17a0-74d3-11d0-b6fe-00a0c90f57da");
         const string HID_DEVICE_SYSTEM_GAME = "HID_DEVICE_SYSTEM_GAME";
+        const string HID_PREFIX = @"HID\";
+        const string USB_PREFIX = @"USB\";
 
         DEVPROPKEY DEVPKEY_Device_BusReportedDeviceDesc;
 
@@ -339,7 +340,7 @@ namespace HidVanguard.Config.Components.Services
 
             foreach (var dev in GetDeviceHardwareIds().Where(d => d.ClassGuid == USB_INPUT_GUID))
             {
-                if (dev.DeviceId.StartsWith(@"USB\", StringComparison.InvariantCultureIgnoreCase))
+                if (dev.DeviceId.StartsWith(USB_PREFIX, StringComparison.InvariantCultureIgnoreCase))
                 {
                     usbs[dev.DeviceId] = dev;
 
@@ -350,7 +351,7 @@ namespace HidVanguard.Config.Components.Services
                             yield return new GameDevice
                             {
                                 DeviceId = hid.DeviceId,
-                                HardwareIds = hid.HardwareIds.Append(dev.HardwareIds),
+                                HardwareIds = hid.HardwareIds.Where(s => s.StartsWith(HID_PREFIX, StringComparison.InvariantCultureIgnoreCase)).Concat(dev.HardwareIds.Where(s => s.StartsWith(USB_PREFIX, StringComparison.InvariantCultureIgnoreCase))).ToArray(),
                                 BusName = dev.BusName
                             };
                         }
@@ -366,7 +367,7 @@ namespace HidVanguard.Config.Components.Services
                         yield return new GameDevice
                         {
                             DeviceId = dev.DeviceId,
-                            HardwareIds = dev.HardwareIds.Append(usbs[dev.ParentId].HardwareIds),
+                            HardwareIds = dev.HardwareIds.Where(s => s.StartsWith(HID_PREFIX, StringComparison.InvariantCultureIgnoreCase)).Concat(usbs[dev.ParentId].HardwareIds.Where(s => s.StartsWith(USB_PREFIX, StringComparison.InvariantCultureIgnoreCase))).ToArray(),
                             BusName = usbs[dev.ParentId].BusName
                         };
                     }
