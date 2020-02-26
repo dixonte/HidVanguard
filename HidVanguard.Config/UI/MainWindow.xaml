@@ -16,11 +16,12 @@
 
     <Window.Resources>
         <conv:HiddenTextConverter x:Key="HiddenTextConverter" />
+        <conv:InstalledConverter x:Key="InstalledConverter" />
         <conv:StringArrayMultiLineConverter x:Key="StringArrayMultiLineConverter" />
         <conv:CountVisibilityConverter x:Key="CountVisibilityConverter" />
         <conv:NullVisibilityConverter x:Key="NullVisibilityConverter" />
 
-        <CollectionViewSource x:Key="GameDeviceCol" Source="{Binding GameDevices}" IsLiveGroupingRequested="True">
+        <CollectionViewSource x:Key="GameDeviceCol" Source="{Binding GameDevices, Mode=OneWay}" IsLiveGroupingRequested="True">
             <CollectionViewSource.SortDescriptions>
                 <scm:SortDescription PropertyName="BusName" />
             </CollectionViewSource.SortDescriptions>
@@ -58,7 +59,7 @@
                 <ListView Margin="2 4 2 2" ItemsSource="{Binding Source={StaticResource GameDeviceCol}}" SelectedItem="{Binding SelectedDevice}">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Device" Width="Auto" DisplayMemberBinding="{Binding BusName}" />
+                            <GridViewColumn Header="Device" Width="Auto" DisplayMemberBinding="{Binding BusName, Mode=OneWay}" />
                         </GridView>
                     </ListView.View>
 
@@ -66,7 +67,7 @@
                         <GroupStyle>
                             <GroupStyle.HeaderTemplate>
                                 <DataTemplate>
-                                    <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding Name}"/>
+                                    <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding Name, Mode=OneWay}"/>
                                 </DataTemplate>
                             </GroupStyle.HeaderTemplate>
                         </GroupStyle>
@@ -74,7 +75,7 @@
 
                     <b:Interaction.Triggers>
                         <b:EventTrigger EventName="MouseDoubleClick">
-                            <b:InvokeCommandAction Command="{Binding GameDeviceToggleHiddenCommand}" CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" />
+                            <b:InvokeCommandAction Command="{Binding GameDeviceToggleHiddenCommand, Mode=OneWay}" CommandParameter="{Binding SelectedItem, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" />
                         </b:EventTrigger>
                     </b:Interaction.Triggers>
                 </ListView>
@@ -108,11 +109,7 @@
 
         <StatusBar Grid.Row="1">
             <StatusBarItem Content="HidGuardian Status:" />
-            <StatusBarItem Content="Installed?" />
-
-            <StatusBarItem HorizontalAlignment="Right">
-                <Button>Uninstall?</Button>
-            </StatusBarItem>
+            <StatusBarItem Content="{Binding HidGuardianInstalled, Mode=OneWay, Converter={StaticResource InstalledConverter}}" Foreground="{Binding HidGuardianInstalled, Mode=OneWay, Converter={StaticResource InstalledConverter}}" />
         </StatusBar>
 
         <StatusBar Grid.Row="1" Grid.Column="1" />
@@ -120,10 +117,6 @@
         <StatusBar Grid.Row="1" Grid.Column="2">
             <StatusBarItem Content="HidVanguard Status:" />
             <StatusBarItem Content="Installed?" />
-
-            <StatusBarItem HorizontalAlignment="Right">
-                <Button>Uninstall?</Button>
-            </StatusBarItem>
         </StatusBar>
     </Grid>
 </Window>
