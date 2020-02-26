@@ -239,7 +239,7 @@ namespace HidVanguard.Config.Components.Services
             public UInt32 cbSize;
             public Guid classGuid;
             public UInt32 devInst;
-            public IntPtr reserved;     // CHANGE #1 - was UInt32
+            public IntPtr reserved;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -399,12 +399,12 @@ namespace HidVanguard.Config.Components.Services
                     DIGCF_ALLCLASSES);
                 CheckError("SetupDiGetClassDevs");
 
-                SP_DEVINFO_DATA devdata = new SP_DEVINFO_DATA();
-                devdata.cbSize = (UInt32)Marshal.SizeOf(devdata);
-
                 // Get first device matching device criterion.
                 for (uint i = 0; ; i++)
                 {
+                    SP_DEVINFO_DATA devdata = new SP_DEVINFO_DATA();
+                    devdata.cbSize = (UInt32)Marshal.SizeOf(devdata);
+
                     SetupDiEnumDeviceInfo(info, i, out devdata);
                     if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS)
                         break;
