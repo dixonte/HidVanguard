@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <UserSecretsId>dotnet-JoystickGremlinWhitelister-2DCF7841-D4D7-4395-9063-6B4259D67F7D</UserSecretsId>
+    <UserSecretsId>dotnet-HidVanguard.Service-2DCF7841-D4D7-4395-9063-6B4259D67F7D</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

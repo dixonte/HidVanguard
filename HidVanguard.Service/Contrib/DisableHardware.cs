@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace JoystickGremlinWhitelister.Contrib
+namespace HidVanguard.Service.Contrib
 {
     public static class DisableHardware
     {

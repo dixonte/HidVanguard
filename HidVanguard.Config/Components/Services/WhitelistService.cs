@@ -54,6 +54,8 @@ namespace HidVanguard.Config.Components.Services
                 _affectedDevices = _affectedDevices.Except(device.HardwareIds, StringComparer.InvariantCultureIgnoreCase).ToList();
 
             Registry.SetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters", "AffectedDevices", _affectedDevices.ToArray(), RegistryValueKind.MultiString);
+
+            // TODO: Toggle device?
         }
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
-namespace JoystickGremlinWhitelister
+namespace HidVanguard.Service
 {
     public class Worker : BackgroundService
     {
@@ -26,7 +26,7 @@ namespace JoystickGremlinWhitelister
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("JoystickGremlinWhitelister starting...");
+            _logger.LogInformation("HidVanguard.Service starting...");
 
             var creationWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceCreationEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = '{TARGET_INSTANCE_NAME}'");
             creationWatcher.EventArrived += CreationWatcher_EventArrived;
@@ -57,10 +57,10 @@ namespace JoystickGremlinWhitelister
 
             await Task.Delay(-1, stoppingToken);
 
+            _logger.LogInformation("HidVanguard.Service stopping...");
+
             creationWatcher.Dispose();
             deletionWatcher.Dispose();
-
-            _logger.LogInformation("JoystickGremlinWhitelister stopping...");
         }
 
         private void CreationWatcher_EventArrived(object sender, EventArrivedEventArgs e)
@@ -104,7 +104,7 @@ namespace JoystickGremlinWhitelister
                     _logger.LogError(ex, "Could not remove process from whitelist.");
             }
 
-            // Toggle a device to make sure Joystick Gremlin sees the change
+            // Toggle a device to make sure apps sees the change
             try
             {
                 if (Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters", "AffectedDevices", null) is string[] affectedDevices)
@@ -115,52 +115,28 @@ namespace JoystickGremlinWhitelister
                     {
                         string toggleVictim = null;
 
-                        using (var q = new ManagementObjectSearcher(@"\\.\root\CIMV2", $"SELECT * FROM Win32_PnPEntity WHERE ClassGuid = '{INPUTDEV_CLASS}'"))
-                        using (var c = q.Get())
+                        Contrib.DisableHardware.DisableDevice((hids, desc) =>
                         {
-                            foreach (var o in c)
+                            var hid = hids.Split('\0').Where(x => x.StartsWith("HID")).OrderByDescending(x => x.Length).FirstOrDefault();
+
+                            if (string.IsNullOrWhiteSpace(hid))
+                                return false;
+
+                            if (affectedDevices.Contains(hid))
                             {
-                                if (o.GetPropertyValue("HardwareID") is string[] hids && hids.Any(h => affectedDevices.Contains(h)))
-                                {
-                                    using (var qn = new ManagementObjectSearcher(@"\\.\root\CIMV2", $"SELECT * FROM Win32_PnPEntity WHERE DeviceID = '{o.GetPropertyValue("DeviceID").ToString().Replace(@"HID\", @"USB\").Replace(@"\", @"\\")}'"))
-                                    using (var cn = qn.Get())
-                                    {
-                                        foreach (var on in cn)
-                                        {
+                                _logger.LogInformation($"Toggling affected device: {hid}");
 
-                                        }
-                                    }
-                                    
-                                    using (var cls = new ManagementClass(o.ClassPath))
-                                    {
-                                        cls.InvokeMethod("Reset", null);
-                                    }
-                                }
+                                toggleVictim = hids;
+                                return true;
                             }
+
+                            return false;
+                        }, true);
+
+                        if (toggleVictim != null)
+                        {
+                            Contrib.DisableHardware.DisableDevice((s, desc) => s == toggleVictim, false);
                         }
-
-                        //Contrib.DisableHardware.DisableDevice((hids, desc) =>
-                        //{
-                        //    var hid = hids.Split('\0').Where(x => x.StartsWith("HID")).OrderByDescending(x => x.Length).FirstOrDefault();
-
-                        //    if (string.IsNullOrWhiteSpace(hid))
-                        //        return false;
-
-                        //    if (affectedDevices.Contains(hid))
-                        //    {
-                        //        _logger.LogInformation($"Toggling affected device: {hid}");
-
-                        //        toggleVictim = hids;
-                        //        return true;
-                        //    }
-
-                        //    return false;
-                        //}, true);
-
-                        //if (toggleVictim != null)
-                        //{
-                        //    Contrib.DisableHardware.DisableDevice((s, desc) => s == toggleVictim, false);
-                        //}
                     }
                 }
             }
