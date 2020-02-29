@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+
+  <?include Bitness.wxi ?>
+  <?define ProductName = "HidVanguard" ?>
+
+  <Product Id="*"
+           Name="$(var.ProductName) $(var.bitness)"
+           Language="1033"
+           Version="!(bind.FileVersion.F_HidVanguard_Service)"
+           Manufacturer="STC"
+           UpgradeCode="06B4F05B-1898-445B-9C15-95B268CE949B">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+    <MajorUpgrade
+      Schedule="afterInstallInitialize"
+      AllowDowngrades="yes"
+      />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="$(var.ProductName)" Level="1">
+      <ComponentGroupRef Id="C_CommonAssemblies" />
+      <ComponentGroupRef Id="C_ExeFiles" />
+    </Feature>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="$(var.PlatformProgramFilesFolder)">
+        <Directory Id="PSITLocation" Name="STC">
+          <Directory Id="InstallLocation" Name="$(var.ProductName)" />
+        </Directory>
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)"/>
+      </Directory>
+    </Directory>
+  </Fragment>
+</Wix>

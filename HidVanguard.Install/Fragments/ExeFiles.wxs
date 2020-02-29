@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?include ..\Bitness.wxi ?>
+  <Fragment>
+    <Icon Id="HidVanguard.Config.exe" SourceFile="$(var.SourceDir)\HidVanguard.Config.exe"/>
+
+    <DirectoryRef Id="InstallLocation">
+      <Component Id="C_HidVanguard_Config" Guid="*" Win64="$(var.Win64)">
+        <File Id="F_HidVanguard_Config" KeyPath="yes" Source="$(var.SourceDir)\HidVanguard.Config.exe">
+          <Shortcut Id="SC_HidVanguard_Config" Directory="ApplicationProgramsFolder" Name="HidVanguard Config" Description="HidVanguard configuration tool" Advertise="yes" Icon="HidVanguard.Config.exe" IconIndex="0" />
+        </File>
+        <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
+      </Component>
+
+      <Component Id="C_HidVanguard_Service" Guid="*" Win64="$(var.Win64)">
+        <File Id="F_HidVanguard_Service" KeyPath="yes" Source="$(var.SourceDir)\HidVanguard.Service.exe" />
+
+        <ServiceInstall
+          Id="ServiceInstaller"
+          Type="ownProcess"
+          Name="HidVanguard"
+          DisplayName="HidVanguard"
+          Description="Watches for whitelisted executables and adds their PIDs to the HidGuardian whitelist."
+          Start="auto"
+          Account="LocalSystem"
+          ErrorControl="normal"
+            />
+        <ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" Name="HidVanguard" Wait="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <ComponentGroup Id="C_ExeFiles">
+      <ComponentRef Id="C_HidVanguard_Config" />
+      <ComponentRef Id="C_HidVanguard_Service" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>
