@@ -1,6 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Command;
 using HidVanguard.Config.Components.Services;
-using HidVanguard.Config.Model;
+using HidVanguard.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,7 +21,11 @@ namespace HidVanguard.Config.UI.ViewModels
         public ObservableCollection<GameDevice> GameDevices { get; set; }
         public GameDevice SelectedDevice { get; set; }
 
+        public ObservableCollection<AllowedProcess> AllowedProcesses { get; set; }
+        public AllowedProcess SelectedProcess { get; set; }
+
         public bool HidGuardianInstalled { get; set; }
+        public bool HidVanguardInstalled { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -49,7 +53,9 @@ namespace HidVanguard.Config.UI.ViewModels
         private void Load()
         {
             GameDevices = new ObservableCollection<GameDevice>(deviceService.GetGameDevices());
+            AllowedProcesses = new ObservableCollection<AllowedProcess>(whitelistSerice.GetAllowedProcesses());
             HidGuardianInstalled = whitelistSerice.GetHidGuardianInstalled();
+            HidVanguardInstalled = whitelistSerice.GetHidVanguardInstalled();
 
             UpdateGameDevicesHidden();
         }

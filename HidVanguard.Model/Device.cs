@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace HidVanguard.Config.Model
+namespace HidVanguard.Model
 {
     [DebuggerDisplay("{DeviceId} [{BusName}] -> {ParentId}")]
     public class Device

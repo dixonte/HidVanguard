@@ -29,13 +29,20 @@
                 <dat:PropertyGroupDescription PropertyName="Hidden" Converter="{StaticResource HiddenTextConverter}" />
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
+
+        <CollectionViewSource x:Key="AllowedProcessesCol" Source="{Binding AllowedProcesses, Mode=OneWay}" IsLiveGroupingRequested="True">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Name" />
+                <scm:SortDescription PropertyName="DirPath" />
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
     </Window.Resources>
     
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="3*" />
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
@@ -95,11 +102,12 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
 
-                <ListView Margin="2 4 2 2">
+                <ListView Margin="2 4 2 2" ItemsSource="{Binding Source={StaticResource AllowedProcessesCol}}" SelectedItem="{Binding SelectedProcess}">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Width="20" />
-                            <GridViewColumn Header="Path" />
+                            <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
+                            <GridViewColumn Header="Location" DisplayMemberBinding="{Binding DirPath}" />
                             <GridViewColumn Header="Security Level" />
                         </GridView>
                     </ListView.View>
@@ -116,7 +124,7 @@
 
         <StatusBar Grid.Row="1" Grid.Column="2">
             <StatusBarItem Content="HidVanguard Status:" />
-            <StatusBarItem Content="Installed?" />
+            <StatusBarItem Content="{Binding HidVanguardInstalled, Mode=OneWay, Converter={StaticResource InstalledConverter}}" Foreground="{Binding HidVanguardInstalled, Mode=OneWay, Converter={StaticResource InstalledConverter}}" />
         </StatusBar>
     </Grid>
 </Window>

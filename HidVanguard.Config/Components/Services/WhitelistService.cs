@@ -1,4 +1,4 @@
-﻿using HidVanguard.Config.Model;
+﻿using HidVanguard.Model;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -12,9 +12,12 @@ namespace HidVanguard.Config.Components.Services
         void Refresh();
 
         bool GetHidGuardianInstalled();
+        bool GetHidVanguardInstalled();
 
         void SetDeviceHidden(GameDevice device, bool hidden);
         bool GetDeviceHidden(GameDevice device);
+
+        IEnumerable<AllowedProcess> GetAllowedProcesses();
     }
 
     public class WhitelistService : IWhitelistService
@@ -41,6 +44,11 @@ namespace HidVanguard.Config.Components.Services
             return Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidGuardian", "ImagePath", null) != null;
         }
 
+        public bool GetHidVanguardInstalled()
+        {
+            return Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidVanguard", "ImagePath", null) != null;
+        }
+
         public bool GetDeviceHidden(GameDevice device)
         {
             return device.HardwareIds.All(id => _affectedDevices.Contains(id, StringComparer.InvariantCultureIgnoreCase));
@@ -56,6 +64,16 @@ namespace HidVanguard.Config.Components.Services
             Registry.SetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters", "AffectedDevices", _affectedDevices.ToArray(), RegistryValueKind.MultiString);
 
             // TODO: Toggle device?
+        }
+
+        public IEnumerable<AllowedProcess> GetAllowedProcesses()
+        {
+            var allowed = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidVanguard\Parameters", "AllowedProcesses", null) as string[];
+
+            foreach(var allowedProcessString in allowed)
+            {
+                yield return AllowedProcess.FromString(allowedProcessString);
+            }
         }
     }
 }

@@ -30,4 +30,8 @@
     <PackageReference Include="PropertyChanged.Fody" Version="3.2.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\HidVanguard.Model\HidVanguard.Model.csproj" />
+  </ItemGroup>
+
 </Project>
