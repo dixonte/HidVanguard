@@ -157,7 +157,7 @@
 
                     <Label Grid.Row="0" Grid.Column="0" Target="{Binding ElementName=tbName}">_Name:</Label>
                     <TextBox Grid.Row="0" Grid.Column="1" Name="tbName" Text="{Binding Name}" />
-                    <Button Grid.Row="0" Grid.Column="2" Padding="10 0" VerticalAlignment="Center" Margin="5 0 0 0" Command="{Binding SelectProcessLocationCommand}">...</Button>
+                    <Button Grid.Row="0" Grid.Column="2" Padding="10 0" VerticalAlignment="Center" Margin="5 0 0 0" Command="{Binding DataContext.SelectProcessLocationCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}">...</Button>
 
                     <Label Grid.Row="1" Grid.Column="0" Target="{Binding ElementName=tbLocation}">_Location:</Label>
                     <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Name="tbLocation" Text="{Binding DirPath}" />

@@ -1,10 +1,12 @@
 ﻿using GalaSoft.MvvmLight.Command;
 using HidVanguard.Config.Components.Services;
 using HidVanguard.Model;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -123,6 +125,22 @@ namespace HidVanguard.Config.UI.ViewModels
         private ICommand _selectProcessLocationCommand;
         public ICommand SelectProcessLocationCommand => _selectProcessLocationCommand ?? (_selectProcessLocationCommand = new RelayCommand(() =>
         {
+            var ofd = new OpenFileDialog
+            {
+                Title = "Select Application",
+                Filter = "Executable files (*.exe)|*.exe",
+                CheckFileExists = true,
+                CheckPathExists = true,
+                DereferenceLinks = true
+            };
+
+            if (ofd.ShowDialog() == true)
+            {
+                EditProcess.Name = ofd.SafeFileName;
+                EditProcess.DirPath = Path.GetDirectoryName(ofd.FileName);
+
+                EditProcess.PopulateHash();
+            }
         }));
     }
 }
