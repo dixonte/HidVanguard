@@ -14,7 +14,17 @@ namespace HidVanguard.Model
         public string DirPath { get; set; }
         public string Hash { get; set; }
 
+        public bool Dirty { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged(string propertyName)
+        {
+            if (propertyName != nameof(Dirty))
+                Dirty = true;
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
 
         public void PopulateHash()
         {
@@ -80,6 +90,8 @@ namespace HidVanguard.Model
                 ap.DirPath = parts[1];
             if (parts.Length > 2 && !string.IsNullOrEmpty(parts[2]))
                 ap.Hash = parts[2];
+
+            ap.Dirty = false;
 
             return ap;
         }

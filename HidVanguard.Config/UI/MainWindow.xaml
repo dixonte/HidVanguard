@@ -20,6 +20,7 @@
         <conv:StringArrayMultiLineConverter x:Key="StringArrayMultiLineConverter" />
         <conv:CountVisibilityConverter x:Key="CountVisibilityConverter" />
         <conv:NullVisibilityConverter x:Key="NullVisibilityConverter" />
+        <conv:NullBooleanConverter x:Key="NullBooleanConverter" />
 
         <CollectionViewSource x:Key="GameDeviceCol" Source="{Binding GameDevices, Mode=OneWay}" IsLiveGroupingRequested="True">
             <CollectionViewSource.SortDescriptions>
@@ -30,7 +31,7 @@
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
 
-        <CollectionViewSource x:Key="AllowedProcessesCol" Source="{Binding AllowedProcesses, Mode=OneWay}" IsLiveGroupingRequested="True">
+        <CollectionViewSource x:Key="AllowedProcessesCol" Source="{Binding AllowedProcesses, Mode=OneWay}">
             <CollectionViewSource.SortDescriptions>
                 <scm:SortDescription PropertyName="Name" />
                 <scm:SortDescription PropertyName="DirPath" />
@@ -99,7 +100,8 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition />
-                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <ListView Margin="2 4 2 2" ItemsSource="{Binding Source={StaticResource AllowedProcessesCol}}" SelectedItem="{Binding SelectedProcess}">
@@ -108,10 +110,61 @@
                             <GridViewColumn Width="20" />
                             <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
                             <GridViewColumn Header="Location" DisplayMemberBinding="{Binding DirPath}" />
-                            <GridViewColumn Header="Security Level" />
+                            <GridViewColumn Header="Hash" DisplayMemberBinding="{Binding Hash}" />
+                            <GridViewColumn Header="Dirty" DisplayMemberBinding="{Binding Dirty}" />
                         </GridView>
                     </ListView.View>
                 </ListView>
+
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.Resources>
+                        <Style TargetType="Button">
+                            <Setter Property="Margin" Value="5" />
+                        </Style>
+                    </Grid.Resources>
+                    
+                    <Button Grid.Column="1" Command="{Binding AddProcessCommand}">_Add</Button>
+                    <Button Grid.Column="2" IsEnabled="{Binding SelectedProcess, Converter={StaticResource NullBooleanConverter}}" Command="{Binding EditProcessCommand}">_Edit</Button>
+                    <Button Grid.Column="3" IsEnabled="{Binding SelectedProcess, Converter={StaticResource NullBooleanConverter}}" Command="{Binding DeleteProcessCommand}">_Delete</Button>
+
+                    <Button Grid.Column="4" HorizontalAlignment="Right" Visibility="{Binding EditProcess, Converter={StaticResource NullVisibilityConverter}}" IsEnabled="{Binding EditProcess.Dirty}" Command="{Binding SaveProcessCommand}">💾</Button>
+                </Grid>
+                
+                <Grid Grid.Row="2" DataContext="{Binding EditProcess}" IsEnabled="{Binding Converter={StaticResource NullBooleanConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Target="{Binding ElementName=tbName}">_Name:</Label>
+                    <TextBox Grid.Row="0" Grid.Column="1" Name="tbName" Text="{Binding Name}" />
+                    <Button Grid.Row="0" Grid.Column="2" Padding="10 0" VerticalAlignment="Center" Margin="5 0 0 0" Command="{Binding SelectProcessLocationCommand}">...</Button>
+
+                    <Label Grid.Row="1" Grid.Column="0" Target="{Binding ElementName=tbLocation}">_Location:</Label>
+                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Name="tbLocation" Text="{Binding DirPath}" />
+
+                    <Label Grid.Row="2" Grid.Column="0" Target="{Binding ElementName=tbHash}">_Hash:</Label>
+                    <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Name="tbHash" Text="{Binding Hash}" />
+                </Grid>
             </Grid>
         </GroupBox>
 

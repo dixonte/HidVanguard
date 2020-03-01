@@ -23,6 +23,7 @@ namespace HidVanguard.Config.UI.ViewModels
 
         public ObservableCollection<AllowedProcess> AllowedProcesses { get; set; }
         public AllowedProcess SelectedProcess { get; set; }
+        public AllowedProcess EditProcess { get; set; }
 
         public bool HidGuardianInstalled { get; set; }
         public bool HidVanguardInstalled { get; set; }
@@ -86,5 +87,42 @@ namespace HidVanguard.Config.UI.ViewModels
 
         private ICommand _refreshCommand;
         public ICommand RefreshCommand => _refreshCommand ?? (_refreshCommand = new RelayCommand(Refresh));
+
+        private ICommand _addProcessCommand;
+        public ICommand AddProcessCommand => _addProcessCommand ?? (_addProcessCommand = new RelayCommand(() =>
+        {
+            EditProcess = new AllowedProcess
+            {
+                Name = "<new process>"
+            };
+            AllowedProcesses.Add(EditProcess);
+            SelectedProcess = EditProcess;
+        }));
+
+        private ICommand _editProcessCommand;
+        public ICommand EditProcessCommand => _editProcessCommand ?? (_editProcessCommand = new RelayCommand(() =>
+        {
+            EditProcess = SelectedProcess;
+        }));
+
+        private ICommand _deleteProcessCommand;
+        public ICommand DeleteProcessCommand => _deleteProcessCommand ?? (_deleteProcessCommand = new RelayCommand(() =>
+        {
+            if (SelectedProcess != null)
+                AllowedProcesses.Remove(SelectedProcess);
+            EditProcess = null;
+        }));
+
+        private ICommand _saveProcessCommand;
+        public ICommand SaveProcessCommand => _saveProcessCommand ?? (_saveProcessCommand = new RelayCommand(() =>
+        {
+            if (EditProcess != null)
+                EditProcess.Dirty = false;
+        }));
+
+        private ICommand _selectProcessLocationCommand;
+        public ICommand SelectProcessLocationCommand => _selectProcessLocationCommand ?? (_selectProcessLocationCommand = new RelayCommand(() =>
+        {
+        }));
     }
 }
