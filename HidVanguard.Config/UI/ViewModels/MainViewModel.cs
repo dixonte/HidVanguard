@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Command;
 using HidVanguard.Config.Components.Services;
+using HidVanguard.Config.Contrib;
 using HidVanguard.Model;
 using Microsoft.Win32;
 using System;
@@ -23,9 +24,9 @@ namespace HidVanguard.Config.UI.ViewModels
         public ObservableCollection<GameDevice> GameDevices { get; set; }
         public GameDevice SelectedDevice { get; set; }
 
-        public ObservableCollection<AllowedProcess> AllowedProcesses { get; set; }
+        public TrulyObservableCollection<AllowedProcess> AllowedProcesses { get; set; }
         public AllowedProcess SelectedProcess { get; set; }
-        public AllowedProcess EditProcess { get; set; }
+        public bool ProcessListDirty { get; set; }
 
         public bool HidGuardianInstalled { get; set; }
         public bool HidVanguardInstalled { get; set; }
@@ -43,7 +44,18 @@ namespace HidVanguard.Config.UI.ViewModels
             this.deviceService = deviceService;
             this.whitelistSerice = whitelistSerice;
 
+            AllowedProcesses = new TrulyObservableCollection<AllowedProcess>();
+            AllowedProcesses.ItemChanged += AllowedProcesses_ItemChanged;
+
             Load();
+        }
+
+        private void AllowedProcesses_ItemChanged(object sender, ItemChangedEventArgs<AllowedProcess> e)
+        {
+            if (e.PropertyName != nameof(AllowedProcess.Dirty))
+            {
+                ProcessListDirty = true;
+            }
         }
 
         private void Refresh()
@@ -56,7 +68,9 @@ namespace HidVanguard.Config.UI.ViewModels
         private void Load()
         {
             GameDevices = new ObservableCollection<GameDevice>(deviceService.GetGameDevices());
-            AllowedProcesses = new ObservableCollection<AllowedProcess>(whitelistSerice.GetAllowedProcesses());
+            AllowedProcesses.Clear();
+            AllowedProcesses.AddRange(whitelistSerice.GetAllowedProcesses());
+            ProcessListDirty = false;
             HidGuardianInstalled = whitelistSerice.GetHidGuardianInstalled();
             HidVanguardInstalled = whitelistSerice.GetHidVanguardInstalled();
 
@@ -93,18 +107,11 @@ namespace HidVanguard.Config.UI.ViewModels
         private ICommand _addProcessCommand;
         public ICommand AddProcessCommand => _addProcessCommand ?? (_addProcessCommand = new RelayCommand(() =>
         {
-            EditProcess = new AllowedProcess
+            SelectedProcess = new AllowedProcess
             {
                 Name = "<new process>"
             };
-            AllowedProcesses.Add(EditProcess);
-            SelectedProcess = EditProcess;
-        }));
-
-        private ICommand _editProcessCommand;
-        public ICommand EditProcessCommand => _editProcessCommand ?? (_editProcessCommand = new RelayCommand(() =>
-        {
-            EditProcess = SelectedProcess;
+            AllowedProcesses.Add(SelectedProcess);
         }));
 
         private ICommand _deleteProcessCommand;
@@ -112,14 +119,23 @@ namespace HidVanguard.Config.UI.ViewModels
         {
             if (SelectedProcess != null)
                 AllowedProcesses.Remove(SelectedProcess);
-            EditProcess = null;
+            SelectedProcess = null;
         }));
 
         private ICommand _saveProcessCommand;
         public ICommand SaveProcessCommand => _saveProcessCommand ?? (_saveProcessCommand = new RelayCommand(() =>
         {
-            if (EditProcess != null)
-                EditProcess.Dirty = false;
+            foreach (var process in AllowedProcesses)
+                process.Dirty = false;
+
+            // TODO: Actually save
+        }));
+
+        private ICommand _reloadProcessesCommand;
+        public ICommand ReloadProcessesCommand => _reloadProcessesCommand ?? (_reloadProcessesCommand = new RelayCommand(() =>
+        {
+            if (MessageBoxResult.Yes == MessageBox.Show("Reload and lose any unsaved changes?", "HidVanguard", MessageBoxButton.YesNo, MessageBoxImage.Question))
+                Refresh();
         }));
 
         private ICommand _selectProcessLocationCommand;
@@ -136,10 +152,10 @@ namespace HidVanguard.Config.UI.ViewModels
 
             if (ofd.ShowDialog() == true)
             {
-                EditProcess.Name = ofd.SafeFileName;
-                EditProcess.DirPath = Path.GetDirectoryName(ofd.FileName);
+                SelectedProcess.Name = ofd.SafeFileName;
+                SelectedProcess.DirPath = Path.GetDirectoryName(ofd.FileName);
 
-                EditProcess.PopulateHash();
+                SelectedProcess.PopulateHash();
             }
         }));
     }
