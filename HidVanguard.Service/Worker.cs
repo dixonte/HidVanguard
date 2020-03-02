@@ -31,50 +31,60 @@ namespace HidVanguard.Service
 
             allowedProcesses = GetAllowedProcesses().ToList();
 
-            _logger.LogDebug($"Loaded {allowedProcesses.Count} allowed processes:\r\n{string.Join("\r\n", allowedProcesses.Select(a => $"{a.Name} in {a.DirPath ?? "<null>"} with hash {a.Hash ?? "<null>"}"))}");
-
-            var eventFilter = string.Join(" OR ", allowedProcesses.Select(a => $"TargetInstance.Name = '{a.Name.Replace("'", "''")}'"));
-            var win32ProcessFilter = string.Join(" OR ", allowedProcesses.Select(a => $"Name = '{a.Name.Replace("'", "''")}'"));
-
-            var creationWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceCreationEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND ({eventFilter})");
-            creationWatcher.EventArrived += CreationWatcher_EventArrived;
-            creationWatcher.Start();
-            var deletionWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceDeletionEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND ({eventFilter})");
-            deletionWatcher.EventArrived += DeletionWatcher_EventArrived;
-            deletionWatcher.Start();
-
-            _logger.LogInformation("WMI watchers started.");
-
-            using (var currentQuery = new ManagementObjectSearcher(@"\\.\root\CIMV2", $"SELECT * FROM Win32_Process WHERE {win32ProcessFilter}"))
-            using (var currentCol = currentQuery.Get())
+            if (allowedProcesses.Count > 0)
             {
-                foreach (var targetInstance in currentCol)
+                _logger.LogDebug($"Loaded {allowedProcesses.Count} allowed processes:\r\n{string.Join("\r\n", allowedProcesses.Select(a => $"{a.Name} in {a.DirPath ?? "<null>"} with hash {a.Hash ?? "<null>"}"))}");
+
+                var eventFilter = string.Join(" OR ", allowedProcesses.Select(a => $"TargetInstance.Name = '{a.Name.Replace("'", "''")}'"));
+                var win32ProcessFilter = string.Join(" OR ", allowedProcesses.Select(a => $"Name = '{a.Name.Replace("'", "''")}'"));
+
+                var creationWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceCreationEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND ({eventFilter})");
+                creationWatcher.EventArrived += CreationWatcher_EventArrived;
+                creationWatcher.Start();
+                var deletionWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceDeletionEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND ({eventFilter})");
+                deletionWatcher.EventArrived += DeletionWatcher_EventArrived;
+                deletionWatcher.Start();
+
+                _logger.LogInformation("WMI watchers started.");
+
+                using (var currentQuery = new ManagementObjectSearcher(@"\\.\root\CIMV2", $"SELECT * FROM Win32_Process WHERE {win32ProcessFilter}"))
+                using (var currentCol = currentQuery.Get())
                 {
-                    if (ValidateTargetInstance(targetInstance))
+                    foreach (var targetInstance in currentCol)
                     {
-                        var pid = GetTargetInstancePID(targetInstance);
-                        var name = GetTargetInstanceName(targetInstance);
+                        if (ValidateTargetInstance(targetInstance))
+                        {
+                            var pid = GetTargetInstancePID(targetInstance);
+                            var name = GetTargetInstanceName(targetInstance);
 
-                        _logger.LogInformation($"Trusted process {name} found already running with PID {pid}, adding to whitelist.");
+                            _logger.LogInformation($"Trusted process {name} found already running with PID {pid}, adding to whitelist.");
 
-                        WhitelistPid(pid, true);
+                            WhitelistPid(pid, true);
+                        }
                     }
                 }
+
+                _logger.LogInformation("Waiting for shutdown command.");
+
+                await Task.Delay(-1, stoppingToken);
+
+                creationWatcher.Dispose();
+                deletionWatcher.Dispose();
+            }
+            else
+            {
+                _logger.LogWarning("Found no allowed processes. Run configuration tool.");
             }
 
-            _logger.LogInformation("Waiting for shutdown command.");
-
-            await Task.Delay(-1, stoppingToken);
-
             _logger.LogInformation("HidVanguard.Service stopping...");
-
-            creationWatcher.Dispose();
-            deletionWatcher.Dispose();
         }
 
         private IEnumerable<AllowedProcess> GetAllowedProcesses()
         {
             var allowed = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidVanguard\Parameters", "AllowedProcesses", null) as string[];
+
+            if (allowed == null)
+                yield break;
 
             foreach (var allowedProcessString in allowed)
             {
