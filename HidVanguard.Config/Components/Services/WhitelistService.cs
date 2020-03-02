@@ -3,7 +3,9 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceProcess;
 using System.Text;
+using System.Windows;
 
 namespace HidVanguard.Config.Components.Services
 {
@@ -88,7 +90,11 @@ namespace HidVanguard.Config.Components.Services
         {
             Registry.SetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidVanguard\Parameters", "AllowedProcesses", allowedProcesses.Select(p => p.ToString()).ToArray(), RegistryValueKind.MultiString);
 
-            // TODO: Restart service
+            // Restart service
+            var service = new ServiceController("HidVanguard");
+            service.Stop();
+            service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+            service.Start();
         }
     }
 }

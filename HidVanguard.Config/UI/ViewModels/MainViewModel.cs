@@ -118,8 +118,11 @@ namespace HidVanguard.Config.UI.ViewModels
         public ICommand DeleteProcessCommand => _deleteProcessCommand ?? (_deleteProcessCommand = new RelayCommand(() =>
         {
             if (SelectedProcess != null)
+            {
                 AllowedProcesses.Remove(SelectedProcess);
-            SelectedProcess = null;
+                SelectedProcess = null;
+                ProcessListDirty = true;
+            }
         }));
 
         private ICommand _saveProcessCommand;
