@@ -1,5 +1,5 @@
 # What is HidVanguard?
-A tool for configuring and automating [HidGuardian](https://github.com/ViGEm/HidGuardian).
+A tool for configuring and automating [HidGuardian](https://github.com/ViGEm/HidGuardian) (Easy to use installer available [here](https://inputmapper.com/downloads/download/5-tools/76-inputmapper-hidguardian)).
 
 # Why would I want that?
 Here's my specific use-case.
