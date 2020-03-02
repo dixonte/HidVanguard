@@ -80,6 +80,9 @@ namespace HidVanguard.Config.Components.Services
         {
             var allowed = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidVanguard\Parameters", "AllowedProcesses", null) as string[];
 
+            if (allowed == null)
+                yield break;
+
             foreach(var allowedProcessString in allowed)
             {
                 yield return AllowedProcess.FromString(allowedProcessString);

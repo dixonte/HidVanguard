@@ -49,6 +49,9 @@ namespace HidVanguard.Config.Contrib
 
         public void AddRange(IEnumerable<T> range)
         {
+            if (range == null)
+                return;
+
             foreach (var item in range)
                 Add(item);
         }
