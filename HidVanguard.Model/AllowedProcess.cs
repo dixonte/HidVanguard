@@ -75,6 +75,23 @@ namespace HidVanguard.Model
             return currentHash == Hash;
         }
 
+        public bool LooseValidate()
+        {
+            if (string.IsNullOrEmpty(Name))
+                return false;
+
+            if (string.IsNullOrEmpty(DirPath))
+                return true;
+
+            if (!File.Exists(Path.Combine(DirPath, Name)))
+                return false;
+
+            if (string.IsNullOrEmpty(Hash))
+                return true;
+
+            return ValidateHash();
+        }
+
         public static AllowedProcess FromString(string s)
         {
             if (string.IsNullOrEmpty(s))

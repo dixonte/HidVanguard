@@ -109,7 +109,6 @@
                 <ListView Margin="2 4 2 2" ItemsSource="{Binding Source={StaticResource AllowedProcessesCol}}" SelectedItem="{Binding SelectedProcess}">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Width="20" />
                             <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
                             <GridViewColumn Header="Location" DisplayMemberBinding="{Binding DirPath}" />
                             <GridViewColumn Header="Hash" DisplayMemberBinding="{Binding Hash}" />

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Threading;
 using System.Threading.Tasks;
+using HidVanguard.Model;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -12,12 +14,11 @@ namespace HidVanguard.Service
 {
     public class Worker : BackgroundService
     {
-        private const string TARGET_INSTANCE_NAME = "joystick_gremlin.exe";
         private const uint POLL_INTERVAL_SEC = 2;
 
-        private const string INPUTDEV_CLASS = "{745a17a0-74d3-11d0-b6fe-00a0c90f57da}";
-
         private readonly ILogger<Worker> _logger;
+
+        private List<AllowedProcess> allowedProcesses;
 
         public Worker(ILogger<Worker> logger)
         {
@@ -28,16 +29,23 @@ namespace HidVanguard.Service
         {
             _logger.LogInformation("HidVanguard.Service starting...");
 
-            var creationWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceCreationEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = '{TARGET_INSTANCE_NAME}'");
+            allowedProcesses = GetAllowedProcesses().ToList();
+
+            _logger.LogDebug($"Loaded {allowedProcesses.Count} allowed processes:\r\n{string.Join("\r\n", allowedProcesses.Select(a => $"{a.Name} in {a.DirPath ?? "<null>"} with hash {a.Hash ?? "<null>"}"))}");
+
+            var eventFilter = string.Join(" OR ", allowedProcesses.Select(a => $"TargetInstance.Name = '{a.Name.Replace("'", "''")}'"));
+            var win32ProcessFilter = string.Join(" OR ", allowedProcesses.Select(a => $"Name = '{a.Name.Replace("'", "''")}'"));
+
+            var creationWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceCreationEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND ({eventFilter})");
             creationWatcher.EventArrived += CreationWatcher_EventArrived;
             creationWatcher.Start();
-            var deletionWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceDeletionEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = '{TARGET_INSTANCE_NAME}'");
+            var deletionWatcher = new ManagementEventWatcher(@"\\.\root\CIMV2", $"SELECT * FROM __InstanceDeletionEvent WITHIN {POLL_INTERVAL_SEC} WHERE TargetInstance ISA 'Win32_Process' AND ({eventFilter})");
             deletionWatcher.EventArrived += DeletionWatcher_EventArrived;
             deletionWatcher.Start();
 
             _logger.LogInformation("WMI watchers started.");
 
-            using (var currentQuery = new ManagementObjectSearcher(@"\\.\root\CIMV2", $"SELECT * FROM Win32_Process WHERE Name = '{TARGET_INSTANCE_NAME}'"))
+            using (var currentQuery = new ManagementObjectSearcher(@"\\.\root\CIMV2", $"SELECT * FROM Win32_Process WHERE {win32ProcessFilter}"))
             using (var currentCol = currentQuery.Get())
             {
                 foreach (var targetInstance in currentCol)
@@ -45,8 +53,9 @@ namespace HidVanguard.Service
                     if (ValidateTargetInstance(targetInstance))
                     {
                         var pid = GetTargetInstancePID(targetInstance);
+                        var name = GetTargetInstanceName(targetInstance);
 
-                        _logger.LogInformation($"Trusted process {TARGET_INSTANCE_NAME} found already running with PID {pid}, adding to whitelist.");
+                        _logger.LogInformation($"Trusted process {name} found already running with PID {pid}, adding to whitelist.");
 
                         WhitelistPid(pid, true);
                     }
@@ -63,13 +72,24 @@ namespace HidVanguard.Service
             deletionWatcher.Dispose();
         }
 
+        private IEnumerable<AllowedProcess> GetAllowedProcesses()
+        {
+            var allowed = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidVanguard\Parameters", "AllowedProcesses", null) as string[];
+
+            foreach (var allowedProcessString in allowed)
+            {
+                yield return AllowedProcess.FromString(allowedProcessString);
+            }
+        }
+
         private void CreationWatcher_EventArrived(object sender, EventArrivedEventArgs e)
         {
             if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject targetInstance && ValidateTargetInstance(targetInstance))
             {
                 var pid = GetTargetInstancePID(targetInstance);
+                var name = GetTargetInstanceName(targetInstance);
 
-                _logger.LogInformation($"Trusted process {TARGET_INSTANCE_NAME} found with PID {pid}, adding to whitelist.");
+                _logger.LogInformation($"Trusted process {name} found with PID {pid}, adding to whitelist.");
 
                 WhitelistPid(pid, true);
             }
@@ -79,8 +99,9 @@ namespace HidVanguard.Service
         {
             if (e.NewEvent.GetPropertyValue("TargetInstance") is ManagementBaseObject targetInstance && ValidateTargetInstance(targetInstance)) {
                 var pid = GetTargetInstancePID(targetInstance);
+                var name = GetTargetInstanceName(targetInstance);
 
-                _logger.LogInformation($"Trusted process {TARGET_INSTANCE_NAME} with PID {pid} closed, removing from whitelist.");
+                _logger.LogInformation($"Trusted process {name} with PID {pid} closed, removing from whitelist.");
 
                 WhitelistPid(pid, false);
             }
@@ -113,9 +134,7 @@ namespace HidVanguard.Service
 
                     if (affectedDevices.Length > 0)
                     {
-                        string toggleVictim = null;
-
-                        Contrib.DisableHardware.DisableDevice((hids, desc) =>
+                        Contrib.DisableHardware.DisableDevice((hids) =>
                         {
                             var hid = hids.Split('\0').Where(x => x.StartsWith("HID")).OrderByDescending(x => x.Length).FirstOrDefault();
 
@@ -126,17 +145,11 @@ namespace HidVanguard.Service
                             {
                                 _logger.LogInformation($"Toggling affected device: {hid}");
 
-                                toggleVictim = hids;
                                 return true;
                             }
 
                             return false;
-                        }, true);
-
-                        if (toggleVictim != null)
-                        {
-                            Contrib.DisableHardware.DisableDevice((s, desc) => s == toggleVictim, false);
-                        }
+                        }, true, true);
                     }
                 }
             }
@@ -153,8 +166,24 @@ namespace HidVanguard.Service
 
             var path = targetInstance.GetPropertyValue("ExecutablePath") as string;
 
-            // TODO: Check this path in some way
-            return true;
+            var name = Path.GetFileName(path);
+            var dir = Path.GetDirectoryName(path);
+
+            var matches = allowedProcesses.Where(p => name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase) && (string.IsNullOrEmpty(p.DirPath) || dir.Equals(p.DirPath, StringComparison.InvariantCultureIgnoreCase)));
+            var valid = matches.Any(m => m.LooseValidate());
+
+            return valid;
+        }
+
+        private string GetTargetInstanceName(ManagementBaseObject targetInstance)
+        {
+            if (targetInstance == null)
+                throw new ArgumentNullException(nameof(targetInstance));
+
+            if (targetInstance.GetPropertyValue("Name") is string instanceName)
+                return instanceName;
+            else
+                return null;
         }
 
         private UInt32 GetTargetInstancePID(ManagementBaseObject targetInstance)

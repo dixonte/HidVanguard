@@ -92,8 +92,11 @@ namespace HidVanguard.Config.Components.Services
 
             // Restart service
             var service = new ServiceController("HidVanguard");
-            service.Stop();
-            service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+            if (service.CanStop)
+            {
+                service.Stop();
+                service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+            }
             service.Start();
         }
     }
