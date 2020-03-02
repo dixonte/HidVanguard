@@ -11,10 +11,18 @@ namespace HidVanguard.Config.Components.Services
     {
         IEnumerable<GameDevice> GetGameDevices();
         IEnumerable<Device> GetDeviceHardwareIds();
+
+        void DisableDevice(Func<string, bool> filter, bool disable = true, bool toggle = false);
     }
 
     public class DeviceService : IDeviceService
     {
+        static readonly Guid USB_INPUT_GUID = new Guid("745a17a0-74d3-11d0-b6fe-00a0c90f57da");
+        const string HID_DEVICE_SYSTEM_GAME = "HID_DEVICE_SYSTEM_GAME";
+        const string HID_PREFIX = @"HID\";
+        const string USB_PREFIX = @"USB\";
+
+        #region Imports and declarations
         const uint DIF_PROPERTYCHANGE = 0x12;
         const uint DICS_ENABLE = 1;
         const uint DICS_DISABLE = 2;  // disable device
@@ -26,11 +34,6 @@ namespace HidVanguard.Config.Components.Services
         const uint ERROR_INVALID_DATA = 13;
         const uint ERROR_NO_MORE_ITEMS = 259;
         const uint ERROR_NOT_FOUND = 1168;
-
-        static readonly Guid USB_INPUT_GUID = new Guid("745a17a0-74d3-11d0-b6fe-00a0c90f57da");
-        const string HID_DEVICE_SYSTEM_GAME = "HID_DEVICE_SYSTEM_GAME";
-        const string HID_PREFIX = @"HID\";
-        const string USB_PREFIX = @"USB\";
 
         DEVPROPKEY DEVPKEY_Device_BusReportedDeviceDesc;
 
@@ -325,6 +328,7 @@ namespace HidVanguard.Config.Components.Services
            int bufferLen,
            int flags = 0
         );
+        #endregion
 
         public DeviceService()
         {
@@ -399,7 +403,6 @@ namespace HidVanguard.Config.Components.Services
                     DIGCF_ALLCLASSES);
                 CheckError("SetupDiGetClassDevs");
 
-                // Get first device matching device criterion.
                 for (uint i = 0; ; i++)
                 {
                     SP_DEVINFO_DATA devdata = new SP_DEVINFO_DATA();
@@ -433,6 +436,82 @@ namespace HidVanguard.Config.Components.Services
                         ParentId = parentId,
                         ClassGuid = classIds != null ? new Guid(classIds.Split('\0').FirstOrDefault(s => !string.IsNullOrEmpty(s))) : (Guid?)null
                     };
+                }
+            }
+            finally
+            {
+                if (info != IntPtr.Zero)
+                    SetupDiDestroyDeviceInfoList(info);
+            }
+        }
+
+        public void DisableDevice(Func<string, bool> filter, bool disable = true, bool toggle = false)
+        {
+            IntPtr info = IntPtr.Zero;
+            Guid NullGuid = Guid.Empty;
+            try
+            {
+                info = SetupDiGetClassDevs(
+                    ref NullGuid,
+                    null,
+                    IntPtr.Zero,
+                    DIGCF_ALLCLASSES);
+                CheckError("SetupDiGetClassDevs");
+
+                // Get first device matching device criterion.
+                SP_DEVINFO_DATA devdata;
+                for (uint i = 0; ; i++)
+                {
+                    devdata = new SP_DEVINFO_DATA();
+                    devdata.cbSize = (UInt32)Marshal.SizeOf(devdata);
+
+                    SetupDiEnumDeviceInfo(info, i, out devdata);
+                    if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS)
+                        throw new ApplicationException("No device matching that Hardware Id found.");
+                    CheckError("SetupDiEnumDeviceInfo");
+
+                    //var hardwareIds = GetStringPropertyForDevice(info, devdata, propId: SPDRP.SPDRP_HARDWAREID);
+                    var devId = GetDeviceId(devdata.devInst);
+
+                    if (devId != null && filter(devId))
+                        break;
+                }
+
+                SP_CLASSINSTALL_HEADER header = new SP_CLASSINSTALL_HEADER();
+                header.cbSize = (UInt32)Marshal.SizeOf(header);
+                header.InstallFunction = DIF_PROPERTYCHANGE;
+
+                SP_PROPCHANGE_PARAMS propchangeparams = new SP_PROPCHANGE_PARAMS();
+                propchangeparams.ClassInstallHeader = header;
+                propchangeparams.StateChange = disable ? DICS_DISABLE : DICS_ENABLE;
+                propchangeparams.Scope = DICS_FLAG_GLOBAL;
+                propchangeparams.HwProfile = 0;
+
+                SetupDiSetClassInstallParams(info,
+                    ref devdata,
+                    ref propchangeparams,
+                    (UInt32)Marshal.SizeOf(propchangeparams));
+                CheckError("SetupDiSetClassInstallParams");
+
+                SetupDiChangeState(
+                    info,
+                    ref devdata);
+                CheckError("SetupDiChangeState");
+
+                if (toggle)
+                {
+                    propchangeparams.StateChange = !disable ? DICS_DISABLE : DICS_ENABLE;
+
+                    SetupDiSetClassInstallParams(info,
+                        ref devdata,
+                        ref propchangeparams,
+                        (UInt32)Marshal.SizeOf(propchangeparams));
+                    CheckError("SetupDiSetClassInstallParams");
+
+                    SetupDiChangeState(
+                        info,
+                        ref devdata);
+                    CheckError("SetupDiChangeState");
                 }
             }
             finally

@@ -18,14 +18,21 @@ namespace HidVanguard.Config.Components.Services
         bool GetDeviceHidden(GameDevice device);
 
         IEnumerable<AllowedProcess> GetAllowedProcesses();
+        void SetAllowedProcesses(IEnumerable<AllowedProcess> allowedProcesses);
     }
 
     public class WhitelistService : IWhitelistService
     {
+        private IDeviceService deviceService;
+
         private List<string> _affectedDevices;
 
-        public WhitelistService()
+        public WhitelistService(
+            IDeviceService deviceService
+        )
         {
+            this.deviceService = deviceService;
+
             Refresh();
         }
 
@@ -63,7 +70,19 @@ namespace HidVanguard.Config.Components.Services
 
             Registry.SetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters", "AffectedDevices", _affectedDevices.ToArray(), RegistryValueKind.MultiString);
 
-            // TODO: Toggle device?
+            // Toggle device
+            deviceService.DisableDevice(hwid =>
+            {
+                //if (hwid.Length == 0)
+                //    return false;
+
+                //var hidA = hwid.Where(i => i.StartsWith("HID\\"));
+                //var hidB = device.HardwareIds.Where(i => i.StartsWith("HID\\"));
+
+                //return hwid.Length > 0 && hwid.Length == device.HardwareIds.Length && hwid.Zip(device.HardwareIds).All(z => z.First.Equals(z.Second));
+
+                return hwid == device.DeviceId;
+            }, true, true);
         }
 
         public IEnumerable<AllowedProcess> GetAllowedProcesses()
@@ -74,6 +93,13 @@ namespace HidVanguard.Config.Components.Services
             {
                 yield return AllowedProcess.FromString(allowedProcessString);
             }
+        }
+
+        public void SetAllowedProcesses(IEnumerable<AllowedProcess> allowedProcesses)
+        {
+            Registry.SetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidVanguard\Parameters", "AllowedProcesses", allowedProcesses.Select(p => p.ToString()).ToArray(), RegistryValueKind.MultiString);
+
+            // TODO: Restart service
         }
     }
 }

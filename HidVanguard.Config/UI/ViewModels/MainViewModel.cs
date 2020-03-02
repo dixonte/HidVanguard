@@ -128,7 +128,7 @@ namespace HidVanguard.Config.UI.ViewModels
             foreach (var process in AllowedProcesses)
                 process.Dirty = false;
 
-            // TODO: Actually save
+            whitelistSerice.SetAllowedProcesses(AllowedProcesses);
         }));
 
         private ICommand _reloadProcessesCommand;

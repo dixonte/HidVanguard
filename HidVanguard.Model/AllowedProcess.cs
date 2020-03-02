@@ -95,5 +95,17 @@ namespace HidVanguard.Model
 
             return ap;
         }
+
+        public override string ToString()
+        {
+            var parts = new string[]
+            {
+                Name ?? string.Empty,
+                DirPath ?? string.Empty,
+                Hash ?? string.Empty
+            };
+
+            return string.Join("|", parts);
+        }
     }
 }
