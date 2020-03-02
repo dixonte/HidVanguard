@@ -171,6 +171,9 @@
             <Component Id="cmpEBF76D1EF4D494E588D2E413D79D1AC3" Guid="*" Win64="$(var.Win64)">
                 <File Id="fil284E528371EC30678F0A18CC88B43B17" KeyPath="yes" Source="$(var.SourceDir)\HidVanguard.Config.runtimeconfig.json" />
             </Component>
+            <Component Id="cmp5273D64497A9D6382A2D77B2572BE1E4" Guid="*" Win64="$(var.Win64)">
+                <File Id="filF31E3FBF261B4137B72C8C5970FBC5F8" KeyPath="yes" Source="$(var.SourceDir)\HidVanguard.Model.dll" />
+            </Component>
             <Component Id="cmp5B4AF7C9006AD85F65772C1CB1DA8154" Guid="*" Win64="$(var.Win64)">
                 <File Id="fil9E018C769B0BF479E48B8112C759CD51" KeyPath="yes" Source="$(var.SourceDir)\HidVanguard.Service.deps.json" />
             </Component>
@@ -1703,6 +1706,7 @@
             <ComponentRef Id="cmpD545F2C7C7931BF1100B2990AD3B7FA0" />
             <ComponentRef Id="cmp0AFE855FC5DC9461F970546D46D1F338" />
             <ComponentRef Id="cmpEBF76D1EF4D494E588D2E413D79D1AC3" />
+            <ComponentRef Id="cmp5273D64497A9D6382A2D77B2572BE1E4" />
             <ComponentRef Id="cmp5B4AF7C9006AD85F65772C1CB1DA8154" />
             <ComponentRef Id="cmp982BC9790ADE65BC067E0C7321A9DBCA" />
             <ComponentRef Id="cmpEDF09DF0B20CFC5F1E38D216DFE810ED" />

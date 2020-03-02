@@ -6,28 +6,31 @@
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>a91da43c-778a-481c-9fa7-a4684fbede87</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>HidVanguard.Install</OutputName>
     <OutputType>Package</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>Debug;SourceDir=$(SolutionDir)Publish</DefineConstants>
+    <OutputName>HidVanguard.Install.x86</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>SourceDir=$(SolutionDir)Publish</DefineConstants>
+    <OutputName>HidVanguard.Install.x86</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DefineConstants>Debug;SourceDir=$(SolutionDir)Publish</DefineConstants>
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <OutputName>HidVanguard.Install.x64</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DefineConstants>SourceDir=$(SolutionDir)Publish</DefineConstants>
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <OutputName>HidVanguard.Install.x64</OutputName>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Bitness.wxi" />
