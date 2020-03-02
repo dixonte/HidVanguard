@@ -71,18 +71,7 @@ namespace HidVanguard.Config.Components.Services
             Registry.SetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters", "AffectedDevices", _affectedDevices.ToArray(), RegistryValueKind.MultiString);
 
             // Toggle device
-            deviceService.DisableDevice(hwid =>
-            {
-                //if (hwid.Length == 0)
-                //    return false;
-
-                //var hidA = hwid.Where(i => i.StartsWith("HID\\"));
-                //var hidB = device.HardwareIds.Where(i => i.StartsWith("HID\\"));
-
-                //return hwid.Length > 0 && hwid.Length == device.HardwareIds.Length && hwid.Zip(device.HardwareIds).All(z => z.First.Equals(z.Second));
-
-                return hwid == device.DeviceId;
-            }, true, true);
+            deviceService.DisableDevice(hwid => hwid == device.DeviceId, true, true);
         }
 
         public IEnumerable<AllowedProcess> GetAllowedProcesses()
