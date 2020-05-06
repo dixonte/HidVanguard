@@ -13,5 +13,6 @@ namespace HidVanguard.Model
         public string[] HardwareIds { get; set; }
         public string ParentId { get; set; }
         public Guid? ClassGuid { get; set; }
+        public bool Present { get; set; }
     }
 }

@@ -83,6 +83,12 @@
                         </GroupStyle>
                     </ListView.GroupStyle>
 
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="IsEnabled" Value="{Binding Present}" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+
                     <b:Interaction.Triggers>
                         <b:EventTrigger EventName="MouseDoubleClick">
                             <b:InvokeCommandAction Command="{Binding GameDeviceToggleHiddenCommand, Mode=OneWay}" CommandParameter="{Binding SelectedItem, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" />

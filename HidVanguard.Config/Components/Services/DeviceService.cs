@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -328,6 +329,9 @@ namespace HidVanguard.Config.Components.Services
            int bufferLen,
            int flags = 0
         );
+
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern int CM_Get_DevNode_Status(out UInt32 status, out UInt32 probNum, UInt32 devInst, int flags);
         #endregion
 
         public DeviceService()
@@ -356,7 +360,8 @@ namespace HidVanguard.Config.Components.Services
                             {
                                 DeviceId = hid.DeviceId,
                                 HardwareIds = hid.HardwareIds.Where(s => s.StartsWith(HID_PREFIX, StringComparison.InvariantCultureIgnoreCase)).Concat(dev.HardwareIds.Where(s => s.StartsWith(USB_PREFIX, StringComparison.InvariantCultureIgnoreCase))).ToArray(),
-                                BusName = dev.BusName
+                                BusName = dev.BusName,
+                                Present = dev.Present
                             };
                         }
 
@@ -372,7 +377,8 @@ namespace HidVanguard.Config.Components.Services
                         {
                             DeviceId = dev.DeviceId,
                             HardwareIds = dev.HardwareIds.Where(s => s.StartsWith(HID_PREFIX, StringComparison.InvariantCultureIgnoreCase)).Concat(usbs[dev.ParentId].HardwareIds.Where(s => s.StartsWith(USB_PREFIX, StringComparison.InvariantCultureIgnoreCase))).ToArray(),
-                            BusName = usbs[dev.ParentId].BusName
+                            BusName = usbs[dev.ParentId].BusName,
+                            Present = usbs[dev.ParentId].Present
                         };
                     }
                     else
@@ -420,6 +426,10 @@ namespace HidVanguard.Config.Components.Services
                     if (hardwareIds == null)
                         continue;
 
+                    uint status;
+                    uint probNum;
+                    var succ = CM_Get_DevNode_Status(out status, out probNum, devdata.devInst, 0);
+
                     var devId = GetDeviceId(devdata.devInst);
 
                     UInt32 parent;
@@ -434,7 +444,8 @@ namespace HidVanguard.Config.Components.Services
                         BusName = busName != null ? string.Join("\r\n", busName.Split('\0').Where(s => !string.IsNullOrEmpty(s))) : null,
                         HardwareIds = hardwareIds.Split('\0').Where(s => !string.IsNullOrEmpty(s)).ToArray(),
                         ParentId = parentId,
-                        ClassGuid = classIds != null ? new Guid(classIds.Split('\0').FirstOrDefault(s => !string.IsNullOrEmpty(s))) : (Guid?)null
+                        ClassGuid = classIds != null ? new Guid(classIds.Split('\0').FirstOrDefault(s => !string.IsNullOrEmpty(s))) : (Guid?)null,
+                        Present = succ == 0
                     };
                 }
             }
@@ -469,6 +480,13 @@ namespace HidVanguard.Config.Components.Services
                     if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS)
                         throw new ApplicationException("No device matching that Hardware Id found.");
                     CheckError("SetupDiEnumDeviceInfo");
+
+                    // Skip devices that aren't working with no issues (e.g. disconnected devices)
+                    uint status;
+                    uint probNum;
+                    var succ = CM_Get_DevNode_Status(out status, out probNum, devdata.devInst, 0);
+                    if (succ != 0)
+                        continue;
 
                     //var hardwareIds = GetStringPropertyForDevice(info, devdata, propId: SPDRP.SPDRP_HARDWAREID);
                     var devId = GetDeviceId(devdata.devInst);

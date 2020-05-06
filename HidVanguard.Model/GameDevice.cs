@@ -15,5 +15,6 @@ namespace HidVanguard.Model
         public bool Hidden { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public bool Present { get; set; }
     }
 }
