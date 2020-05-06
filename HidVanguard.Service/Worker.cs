@@ -63,18 +63,15 @@ namespace HidVanguard.Service
                         }
                     }
                 }
-
-                _logger.LogInformation("Waiting for shutdown command.");
-
-                await Task.Delay(-1, stoppingToken);
-
-                creationWatcher.Dispose();
-                deletionWatcher.Dispose();
             }
             else
             {
                 _logger.LogWarning("Found no allowed processes. Run configuration tool.");
             }
+
+            _logger.LogInformation("Waiting for shutdown command.");
+
+            await Task.Delay(-1, stoppingToken);
 
             _logger.LogInformation("HidVanguard.Service stopping...");
         }
