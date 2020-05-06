@@ -81,7 +81,15 @@ namespace HidVanguard.Config.UI.ViewModels
         {
             foreach (var gameDevice in GameDevices)
             {
-                gameDevice.Hidden = whitelistSerice.GetDeviceHidden(gameDevice);
+                var hidden = whitelistSerice.GetDeviceHidden(gameDevice);
+
+                // If a device's hidden status changed, toggle it for the benefit of other programs
+                if (gameDevice.Hidden != hidden)
+                {
+                    deviceService.DisableDevice(devId => devId == gameDevice.DeviceId, toggle: true);
+
+                    gameDevice.Hidden = hidden;
+                }
             }
         }
 

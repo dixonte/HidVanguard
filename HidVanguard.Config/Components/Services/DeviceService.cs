@@ -478,8 +478,14 @@ namespace HidVanguard.Config.Components.Services
 
                     SetupDiEnumDeviceInfo(info, i, out devdata);
                     if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS)
-                        throw new ApplicationException("No device matching that Hardware Id found.");
+                        break;
                     CheckError("SetupDiEnumDeviceInfo");
+
+                    //var hardwareIds = GetStringPropertyForDevice(info, devdata, propId: SPDRP.SPDRP_HARDWAREID);
+                    var devId = GetDeviceId(devdata.devInst);
+
+                    if (devId == null || !filter(devId))
+                        continue;
 
                     // Skip devices that aren't working with no issues (e.g. disconnected devices)
                     uint status;
@@ -488,37 +494,15 @@ namespace HidVanguard.Config.Components.Services
                     if (succ != 0)
                         continue;
 
-                    //var hardwareIds = GetStringPropertyForDevice(info, devdata, propId: SPDRP.SPDRP_HARDWAREID);
-                    var devId = GetDeviceId(devdata.devInst);
+                    SP_CLASSINSTALL_HEADER header = new SP_CLASSINSTALL_HEADER();
+                    header.cbSize = (UInt32)Marshal.SizeOf(header);
+                    header.InstallFunction = DIF_PROPERTYCHANGE;
 
-                    if (devId != null && filter(devId))
-                        break;
-                }
-
-                SP_CLASSINSTALL_HEADER header = new SP_CLASSINSTALL_HEADER();
-                header.cbSize = (UInt32)Marshal.SizeOf(header);
-                header.InstallFunction = DIF_PROPERTYCHANGE;
-
-                SP_PROPCHANGE_PARAMS propchangeparams = new SP_PROPCHANGE_PARAMS();
-                propchangeparams.ClassInstallHeader = header;
-                propchangeparams.StateChange = disable ? DICS_DISABLE : DICS_ENABLE;
-                propchangeparams.Scope = DICS_FLAG_GLOBAL;
-                propchangeparams.HwProfile = 0;
-
-                SetupDiSetClassInstallParams(info,
-                    ref devdata,
-                    ref propchangeparams,
-                    (UInt32)Marshal.SizeOf(propchangeparams));
-                CheckError("SetupDiSetClassInstallParams");
-
-                SetupDiChangeState(
-                    info,
-                    ref devdata);
-                CheckError("SetupDiChangeState");
-
-                if (toggle)
-                {
-                    propchangeparams.StateChange = !disable ? DICS_DISABLE : DICS_ENABLE;
+                    SP_PROPCHANGE_PARAMS propchangeparams = new SP_PROPCHANGE_PARAMS();
+                    propchangeparams.ClassInstallHeader = header;
+                    propchangeparams.StateChange = disable ? DICS_DISABLE : DICS_ENABLE;
+                    propchangeparams.Scope = DICS_FLAG_GLOBAL;
+                    propchangeparams.HwProfile = 0;
 
                     SetupDiSetClassInstallParams(info,
                         ref devdata,
@@ -530,6 +514,22 @@ namespace HidVanguard.Config.Components.Services
                         info,
                         ref devdata);
                     CheckError("SetupDiChangeState");
+
+                    if (toggle)
+                    {
+                        propchangeparams.StateChange = !disable ? DICS_DISABLE : DICS_ENABLE;
+
+                        SetupDiSetClassInstallParams(info,
+                            ref devdata,
+                            ref propchangeparams,
+                            (UInt32)Marshal.SizeOf(propchangeparams));
+                        CheckError("SetupDiSetClassInstallParams");
+
+                        SetupDiChangeState(
+                            info,
+                            ref devdata);
+                        CheckError("SetupDiChangeState");
+                    }
                 }
             }
             finally
