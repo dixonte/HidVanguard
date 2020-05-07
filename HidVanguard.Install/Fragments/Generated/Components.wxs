@@ -303,9 +303,6 @@
             <Component Id="cmp3837E3CC94C2C3BBC9B9A3026EA988AD" Guid="*" Win64="$(var.Win64)">
                 <File Id="filF60D45962A59C9DFE1501A3960A49B8D" KeyPath="yes" Source="$(var.SourceDir)\mscordaccore.dll" />
             </Component>
-            <Component Id="cmp75A09585F70F34562319DA62E03088AA" Guid="*" Win64="$(var.Win64)">
-                <File Id="fil54FFF081084437C1BB2A312E98A900AC" KeyPath="yes" Source="$(var.SourceDir)\mscordaccore_amd64_amd64_4.700.19.60701.dll" />
-            </Component>
             <Component Id="cmp99C4CD51A9DBBCAAC3147D792C62F605" Guid="*" Win64="$(var.Win64)">
                 <File Id="filA597AE8E3CBA5ED9CA8968485ABD64AF" KeyPath="yes" Source="$(var.SourceDir)\mscordaccore_amd64_amd64_4.700.20.11803.dll" />
             </Component>
@@ -1753,7 +1750,6 @@
             <ComponentRef Id="cmp71B1F6C717C44D8CE8FF4612229E0569" />
             <ComponentRef Id="cmpCE6167BB9F42BFE7A5F9CB8DA7480F34" />
             <ComponentRef Id="cmp3837E3CC94C2C3BBC9B9A3026EA988AD" />
-            <ComponentRef Id="cmp75A09585F70F34562319DA62E03088AA" />
             <ComponentRef Id="cmp99C4CD51A9DBBCAAC3147D792C62F605" />
             <ComponentRef Id="cmpE3ADF6CADBF3830225D645491DFDE4DD" />
             <ComponentRef Id="cmpFAE67B05813B320774F72AFC4AB5C9D1" />
