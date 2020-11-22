@@ -360,6 +360,7 @@ namespace HidVanguard.Config.Components.Services
                             {
                                 DeviceId = hid.DeviceId,
                                 HardwareIds = hid.HardwareIds.Where(s => s.StartsWith(HID_PREFIX, StringComparison.InvariantCultureIgnoreCase)).Concat(dev.HardwareIds.Where(s => s.StartsWith(USB_PREFIX, StringComparison.InvariantCultureIgnoreCase))).ToArray(),
+                                Description = hid.Description,
                                 BusName = dev.BusName,
                                 Present = dev.Present
                             };
@@ -377,6 +378,7 @@ namespace HidVanguard.Config.Components.Services
                         {
                             DeviceId = dev.DeviceId,
                             HardwareIds = dev.HardwareIds.Where(s => s.StartsWith(HID_PREFIX, StringComparison.InvariantCultureIgnoreCase)).Concat(usbs[dev.ParentId].HardwareIds.Where(s => s.StartsWith(USB_PREFIX, StringComparison.InvariantCultureIgnoreCase))).ToArray(),
+                            Description = dev.Description,
                             BusName = usbs[dev.ParentId].BusName,
                             Present = usbs[dev.ParentId].Present
                         };
@@ -389,7 +391,8 @@ namespace HidVanguard.Config.Components.Services
                         pendingHids[dev.ParentId].Add(new GameDevice
                         {
                             DeviceId = dev.DeviceId,
-                            HardwareIds = dev.HardwareIds
+                            HardwareIds = dev.HardwareIds,
+                            Description = dev.Description
                         });
                     }
                 }
@@ -419,6 +422,7 @@ namespace HidVanguard.Config.Components.Services
                         break;
                     CheckError("SetupDiEnumDeviceInfo");
 
+                    var devDesc = GetStringPropertyForDevice(info, devdata, propId: SPDRP.SPDRP_DEVICEDESC);
                     var hardwareIds = GetStringPropertyForDevice(info, devdata, propId: SPDRP.SPDRP_HARDWAREID);
                     var busName = GetStringPropertyForDevice(info, devdata, propKey: DEVPKEY_Device_BusReportedDeviceDesc);
                     var classIds = GetStringPropertyForDevice(info, devdata, propId: SPDRP.SPDRP_CLASSGUID);
@@ -441,6 +445,7 @@ namespace HidVanguard.Config.Components.Services
                     yield return new Device
                     {
                         DeviceId = devId,
+                        Description = devDesc != null ? devDesc.TrimEnd('\0') : null,
                         BusName = busName != null ? string.Join("\r\n", busName.Split('\0').Where(s => !string.IsNullOrEmpty(s))) : null,
                         HardwareIds = hardwareIds.Split('\0').Where(s => !string.IsNullOrEmpty(s)).ToArray(),
                         ParentId = parentId,
@@ -580,16 +585,26 @@ namespace HidVanguard.Config.Components.Services
             if ((propId == null) == (propKey == null))
                 throw new ArgumentException("Must pass only one of propId and propKey.");
 
-            uint proptype, outsize;
+            uint proptype, outsize = 0;
             IntPtr buffer = IntPtr.Zero;
             try
             {
-                uint buflen = 512;
-                buffer = Marshal.AllocHGlobal((int)buflen);
-                outsize = 0;
-
                 if (propId != null)
                 {
+                    // Get required size
+                    SetupDiGetDeviceRegistryProperty(
+                        info,
+                        ref devdata,
+                        propId.Value,
+                        out proptype,
+                        IntPtr.Zero,
+                        0,
+                        ref outsize);
+
+                    uint buflen = outsize+1;
+                    buffer = Marshal.AllocHGlobal((int)buflen);
+
+                    // Retrieve buffer
                     SetupDiGetDeviceRegistryProperty(
                         info,
                         ref devdata,
@@ -603,6 +618,21 @@ namespace HidVanguard.Config.Components.Services
                 {
                     var key = propKey.Value;
 
+                    // Get required size
+                    SetupDiGetDeviceProperty(
+                        info,
+                        ref devdata,
+                        ref key,
+                        out proptype,
+                        IntPtr.Zero,
+                        0,
+                        out outsize,
+                        0);
+
+                    uint buflen = outsize+1;
+                    buffer = Marshal.AllocHGlobal((int)buflen);
+
+                    // Retrieve buffer
                     SetupDiGetDeviceProperty(
                         info,
                         ref devdata,
@@ -618,10 +648,11 @@ namespace HidVanguard.Config.Components.Services
                 if (errcode == ERROR_INVALID_DATA || errcode == ERROR_NOT_FOUND)
                     return null;
 
+                CheckError("SetupDiGetDeviceProperty", errcode);
+
                 byte[] lbuffer = new byte[outsize];
                 Marshal.Copy(buffer, lbuffer, 0, (int)outsize);
 
-                CheckError("SetupDiGetDeviceProperty", errcode);
                 return Encoding.Unicode.GetString(lbuffer);
             }
             finally

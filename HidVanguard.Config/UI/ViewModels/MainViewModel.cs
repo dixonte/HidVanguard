@@ -97,6 +97,9 @@ namespace HidVanguard.Config.UI.ViewModels
 
         public ICommand GameDeviceToggleHiddenCommand => _gameDeviceToggleHiddenCommand ?? (_gameDeviceToggleHiddenCommand = new RelayCommand<GameDevice>(gameDevice =>
         {
+            if (gameDevice == null)
+                return;
+
             if (HidGuardianInstalled)
             {
                 whitelistSerice.SetDeviceHidden(gameDevice, !gameDevice.Hidden);
