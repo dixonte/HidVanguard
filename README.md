@@ -1,3 +1,5 @@
+At this stage, you probably want to use [HidHide](https://github.com/ViGEm/HidHide) instead of managing HidGuardian with HidVanguard. But I'll leave this repository up just in case, for now.
+
 # What is HidVanguard?
 A tool for configuring and automating [HidGuardian](https://github.com/ViGEm/HidGuardian) (Easy to use installer available [here](https://inputmapper.com/downloads/download/5-tools/76-inputmapper-hidguardian)).
 
